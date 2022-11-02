@@ -4,7 +4,7 @@ This is an editor plugin for [Godot Engine](https://godotengine.org) that provid
 
 ![screenshot](https://user-images.githubusercontent.com/7024016/199555818-97e09cdf-1dc4-4a27-a6e8-9235f7f52cbb.png)
 
-[Screencast on YoutTube](https://youtu.be/a2_VDdr6kFQ)
+[Screencast on YoutTube](https://youtu.be/tGkb0B7b8nA)
 
 ## Installation
 
