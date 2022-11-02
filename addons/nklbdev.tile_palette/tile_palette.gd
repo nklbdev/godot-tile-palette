@@ -1,8 +1,14 @@
 tool
 extends Control
 
-export var tile_border_color: Color = Color(1, 0, 0)
-export var tile_selection_color: Color = Color(0, 0, 1, 0.5)
+export var single_tile_border_color: Color = Color("fce844")
+export var atlas_tile_border_color: Color = Color("c9cfd4")
+export var atlas_subtile_border_color: Color = Color("4cb299")
+export var auto_tile_border_color: Color = Color("4490fc")
+export var auto_subtile_border_color: Color = Color("4cb299")
+export var absent_tile_border_color: Color = Color(1, 0, 0)
+export var absent_tile_fill_color: Color = Color(1, 0, 0.5)
+export var tile_selection_color: Color = Color(0, 0, 1, 0.7)
 var _items: ItemList
 var _atlas_items: ItemList
 var _disable_autotile_check_box: CheckBox
@@ -91,12 +97,13 @@ func _on_enable_priority_check_box_toggled(pressed: bool):
 		_on_TextureItemList_item_selected(selected_items[0])
 
 func _update_buttons_mouse_filter():
-	var rect = _panel.get_global_rect()
-	var mouse_position = _panel.get_global_mouse_position()
-	if rect.has_point(mouse_position):
-		_on_mouse_entered()
-	else:
-		_on_mouse_exited()
+	if _panel:
+		var rect = _panel.get_global_rect()
+		var mouse_position = _panel.get_global_mouse_position()
+		if rect.has_point(mouse_position):
+			_on_mouse_entered()
+		else:
+			_on_mouse_exited()
 
 func _ready():
 	_is_ready = true
@@ -132,7 +139,8 @@ func _fill():
 			_sprite_border.remove_child(child)
 			child.queue_free()
 		_tileset.connect("changed", self, "_on_tileset_changed")
-	tilemap.connect("settings_changed", self, "_on_tilemap_settings_changed")
+	if not tilemap.is_connected("settings_changed", self, "_on_tilemap_settings_changed"):
+		tilemap.connect("settings_changed", self, "_on_tilemap_settings_changed")
 
 func _clear():
 	if _is_ready:
@@ -164,25 +172,39 @@ func _on_tilemap_settings_changed():
 func _on_tileset_changed():
 	_refresh()
 
-func _create_tile_button(tile_id: int, tile_region: Rect2, subtile_index: int = -1, subtile_coord: Vector2 = Vector2.ZERO):
+func _create_tile_button(tile_id: int, tile_region: Rect2, subtile_index = -1, subtile_coord: Vector2 = Vector2.ZERO):
 	var tile_button = ReferenceRect.new()
 	_sprite_border.add_child(tile_button)
 	tile_button.rect_size = tile_region.size
 	tile_button.rect_position = tile_region.position
-	tile_button.border_color = tile_border_color
-	tile_button.set_meta("tile_region", tile_region)
-	tile_button.set_meta("tile_id", tile_id)
-	tile_button.set_meta("subtile_index", subtile_index)
-	tile_button.mouse_filter = Control.MOUSE_FILTER_PASS
-	tile_button.connect("gui_input", self, "_on_ReferenceRect_gui_input", [tile_button, tile_id])
-	if _last_selected_tile == tile_id:
-		if (_last_selected_subtile == subtile_index) or \
-			(_last_selected_subtile == -1 and subtile_index == 0) or \
-			(_last_selected_subtile >= 0 and subtile_index == -1):
-			_selection_rect.rect_size = tile_button.rect_size
-			_selection_rect.rect_position = tile_button.rect_position
-			if subtile_index < 0:
-				_last_selected_subtile = -1
+	if subtile_index == null:
+		tile_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tile_button.border_color = absent_tile_border_color
+		var color_rect = ColorRect.new()
+		color_rect.rect_size = tile_region.size
+		color_rect.rect_position = tile_region.position
+		color_rect.color = absent_tile_fill_color
+	else:
+		match _tileset.tile_get_tile_mode(tile_id):
+			TileSet.SINGLE_TILE:
+				tile_button.border_color = single_tile_border_color
+			TileSet.AUTO_TILE:
+				tile_button.border_color = auto_tile_border_color if subtile_index < 0 else auto_subtile_border_color
+			TileSet.ATLAS_TILE:
+				tile_button.border_color = atlas_tile_border_color if subtile_index < 0 else atlas_subtile_border_color
+		tile_button.set_meta("tile_region", tile_region)
+		tile_button.set_meta("tile_id", tile_id)
+		tile_button.set_meta("subtile_index", subtile_index)
+		tile_button.mouse_filter = Control.MOUSE_FILTER_PASS
+		tile_button.connect("gui_input", self, "_on_ReferenceRect_gui_input", [tile_button, tile_id])
+		if _last_selected_tile == tile_id:
+			if (_last_selected_subtile == subtile_index) or \
+				(_last_selected_subtile == -1 and subtile_index == 0) or \
+				(_last_selected_subtile >= 0 and subtile_index == -1):
+				_selection_rect.rect_size = tile_button.rect_size
+				_selection_rect.rect_position = tile_button.rect_position
+				if subtile_index < 0:
+					_last_selected_subtile = -1
 
 func _create_single_tile_button(tile_id: int):
 	_create_tile_button(tile_id, _tileset.tile_get_region(tile_id))
