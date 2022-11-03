@@ -137,8 +137,8 @@ func _fill():
 			child.queue_free()
 		if not _tileset.is_connected("changed", self, "_on_tileset_changed"):
 			_tileset.connect("changed", self, "_on_tileset_changed")
-	if not tilemap.is_connected("settings_changed", self, "_on_tilemap_settings_changed"):
-		tilemap.connect("settings_changed", self, "_on_tilemap_settings_changed")
+#	if not tilemap.is_connected("settings_changed", self, "_on_tilemap_settings_changed"):
+#		tilemap.connect("settings_changed", self, "_on_tilemap_settings_changed")
 
 func _clear():
 	_previous_selected_texture_index = -1
@@ -157,15 +157,12 @@ func _clear():
 	for connection in get_incoming_connections():
 		if connection.source is TileSet and connection.signal_name == "changed" and connection.method_name == "_on_tileset_changed":
 			connection.source.disconnect("changed", self, "_on_tileset_changed")
-		if connection.source is TileMap and connection.signal_name == "settings_changed" and connection.method_name == "_on_tilemap_settings_changed":
-			connection.source.disconnect("settings_changed", self, "_on_tilemap_settings_changed")
+#		if connection.source is TileMap and connection.signal_name == "settings_changed" and connection.method_name == "_on_tilemap_settings_changed":
+#			connection.source.disconnect("settings_changed", self, "_on_tilemap_settings_changed")
 
 func _refresh():
 	_clear()
 	_fill()
-
-func _on_tilemap_settings_changed():
-	_refresh()
 
 func _on_tileset_changed():
 	_refresh()
