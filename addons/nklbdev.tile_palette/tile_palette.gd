@@ -27,6 +27,7 @@ onready var _tools_container: HBoxContainer = $HSplitContainer/TextureVBoxContai
 onready var _panel: Panel = $HSplitContainer/TextureVBoxContainer/Panel
 onready var _texture_list_scaler: HSlider = $HSplitContainer/TextureListVBoxContainer/ScaleHSlider
 onready var _texture_scaler: HSlider = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScaleHSlider
+onready var _transform_indicator: TextureRect = $HSplitContainer/TextureVBoxContainer/HBoxContainer/HBoxContainer/TransformationIndicatorPlaceholderColorRect/TransformIndicatorTextureRect
 var _dragging: bool = false
 var _editor_item_indices_by_tile_ids = {}
 var _previous_selected_texture_index: int = -1
@@ -83,6 +84,41 @@ func set_tools(
 	
 	_disable_autotile_check_box.connect("toggled", self, "_on_disable_autotile_check_box_toggled")
 	_enable_priority_check_box.connect("toggled", self, "_on_enable_priority_check_box_toggled")
+	
+	_on_clear_transform()
+	_tile_map_editor._clear_transform()
+	
+	_rotate_left_button.connect("pressed", self, "_on_rotate_counterclockwise")
+	_rotate_right_button.connect("pressed", self, "_on_rotate_clockwise")
+	_flip_horizontally_button.connect("pressed", self, "_on_flip_horizontally")
+	_flip_vertically_button.connect("pressed", self, "_on_flip_vertically")
+	_clear_transform_button.connect("pressed", self, "_on_clear_transform")
+
+func _on_rotate_counterclockwise():
+	_transform_indicator.rect_rotation -= 90
+	if _transform_indicator.rect_rotation < 0:
+		_transform_indicator.rect_rotation += 360
+
+func _on_rotate_clockwise():
+	_transform_indicator.rect_rotation += 90
+	if _transform_indicator.rect_rotation >= 360:
+		_transform_indicator.rect_rotation -= 360
+
+func _on_flip_horizontally():
+	if _transform_indicator.rect_rotation == 0 or _transform_indicator.rect_rotation == 180:
+		_transform_indicator.rect_scale.x *= -1
+	else:
+		_transform_indicator.rect_scale.y *= -1
+
+func _on_flip_vertically():
+	if _transform_indicator.rect_rotation == 0 or _transform_indicator.rect_rotation == 180:
+		_transform_indicator.rect_scale.y *= -1
+	else:
+		_transform_indicator.rect_scale.x *= -1
+
+func _on_clear_transform():
+	_transform_indicator.rect_rotation = 0
+	_transform_indicator.rect_scale = Vector2.ONE
 
 func _on_disable_autotile_check_box_toggled(pressed: bool):
 	var selected_items = _texture_item_list.get_selected_items()
@@ -307,7 +343,7 @@ func _input(event: InputEvent):
 
 func _scale(factor: float):
 	var sprite_global_position = _sprite.rect_global_position
-	_scaling_helper.rect_position = get_local_mouse_position()
+	_scaling_helper.rect_global_position = get_global_mouse_position()
 	_sprite.rect_global_position = sprite_global_position
 	_scaling_helper.rect_scale *= factor
 	_texture_scaler.value = _scaling_helper.rect_scale.x

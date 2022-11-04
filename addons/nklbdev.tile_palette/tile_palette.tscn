@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=3 format=2]
 
 [ext_resource path="res://addons/nklbdev.tile_palette/tile_palette.gd" type="Script" id=1]
+[ext_resource path="res://addons/nklbdev.tile_palette/transform_indicator.png" type="Texture" id=3]
 
 [node name="TilePalette" type="Control"]
 anchor_right = 1.0
@@ -11,13 +12,6 @@ script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
-single_tile_border_color = Color( 0.921569, 1, 0, 1 )
-atlas_tile_border_color = Color( 0, 1, 1, 1 )
-atlas_subtile_border_color = Color( 0, 1, 1, 1 )
-auto_tile_border_color = Color( 0, 1, 1, 1 )
-auto_subtile_border_color = Color( 0, 1, 1, 1 )
-absent_tile_fill_color = Color( 1, 0, 0, 1 )
-tile_selection_color = Color( 0, 0, 1, 0.5 )
 
 [node name="HSplitContainer" type="HSplitContainer" parent="."]
 anchor_right = 1.0
@@ -64,7 +58,7 @@ size_flags_vertical = 3
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer/TextureVBoxContainer"]
 margin_right = 500.0
-margin_bottom = 16.0
+margin_bottom = 32.0
 rect_clip_content = true
 mouse_filter = 0
 size_flags_horizontal = 3
@@ -74,8 +68,23 @@ __meta__ = {
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer"]
 margin_right = 248.0
-margin_bottom = 16.0
+margin_bottom = 32.0
 size_flags_horizontal = 3
+
+[node name="TransformationIndicatorPlaceholderColorRect" type="ColorRect" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/HBoxContainer"]
+margin_right = 32.0
+margin_bottom = 32.0
+rect_min_size = Vector2( 32, 32 )
+color = Color( 0, 0, 0, 0 )
+
+[node name="TransformIndicatorTextureRect" type="TextureRect" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/HBoxContainer/TransformationIndicatorPlaceholderColorRect"]
+margin_right = 32.0
+margin_bottom = 32.0
+rect_pivot_offset = Vector2( 16, 16 )
+texture = ExtResource( 3 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="ScaleHSlider" type="HSlider" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer"]
 margin_left = 252.0
@@ -90,7 +99,7 @@ allow_greater = true
 allow_lesser = true
 
 [node name="Panel" type="Panel" parent="HSplitContainer/TextureVBoxContainer"]
-margin_top = 20.0
+margin_top = 36.0
 margin_right = 500.0
 margin_bottom = 480.0
 rect_clip_content = true
