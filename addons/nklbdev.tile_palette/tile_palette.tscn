@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://addons/nklbdev.tile_palette/tile_palette.gd" type="Script" id=1]
-[ext_resource path="res://addons/nklbdev.tile_palette/transform_indicator.png" type="Texture" id=3]
+[ext_resource path="res://addons/nklbdev.tile_palette/reset_scaling.svg" type="Texture" id=2]
+[ext_resource path="res://addons/nklbdev.tile_palette/transform_indicator.svg" type="Texture" id=3]
 
 [node name="TilePalette" type="Control"]
 anchor_right = 1.0
@@ -58,7 +59,7 @@ size_flags_vertical = 3
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer/TextureVBoxContainer"]
 margin_right = 500.0
-margin_bottom = 32.0
+margin_bottom = 72.0
 rect_clip_content = true
 mouse_filter = 0
 size_flags_horizontal = 3
@@ -66,29 +67,39 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer"]
-margin_right = 248.0
-margin_bottom = 32.0
+[node name="ToolsHBoxContainer" type="HBoxContainer" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer"]
+margin_right = 76.0
+margin_bottom = 72.0
+
+[node name="TransformationIndicatorPlaceholderMarginContainer" type="MarginContainer" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/ToolsHBoxContainer"]
+margin_right = 76.0
+margin_bottom = 72.0
+
+[node name="TransformationIndicatorPlaceholderToolButton" type="ToolButton" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/ToolsHBoxContainer/TransformationIndicatorPlaceholderMarginContainer"]
+margin_right = 76.0
+margin_bottom = 72.0
+hint_tooltip = "Tile Orientation Indicator"
+focus_mode = 0
+shortcut_in_tooltip = false
+button_mask = 0
+enabled_focus_mode = 0
+icon = ExtResource( 3 )
+
+[node name="ScalingHBoxContainer" type="HBoxContainer" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer"]
+margin_left = 80.0
+margin_right = 500.0
+margin_bottom = 72.0
 size_flags_horizontal = 3
 
-[node name="TransformationIndicatorPlaceholderColorRect" type="ColorRect" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/HBoxContainer"]
-margin_right = 32.0
-margin_bottom = 32.0
-rect_min_size = Vector2( 32, 32 )
-color = Color( 0, 0, 0, 0 )
+[node name="ResetScalingToolButton" type="ToolButton" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer"]
+margin_right = 76.0
+margin_bottom = 72.0
+hint_tooltip = "Reset Scaling"
+icon = ExtResource( 2 )
 
-[node name="TransformIndicatorTextureRect" type="TextureRect" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/HBoxContainer/TransformationIndicatorPlaceholderColorRect"]
-margin_right = 32.0
-margin_bottom = 32.0
-rect_pivot_offset = Vector2( 16, 16 )
-texture = ExtResource( 3 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="ScaleHSlider" type="HSlider" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer"]
-margin_left = 252.0
-margin_right = 500.0
+[node name="ScaleHSlider" type="HSlider" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer"]
+margin_left = 80.0
+margin_right = 420.0
 margin_bottom = 16.0
 size_flags_horizontal = 3
 min_value = 0.01
@@ -99,7 +110,7 @@ allow_greater = true
 allow_lesser = true
 
 [node name="Panel" type="Panel" parent="HSplitContainer/TextureVBoxContainer"]
-margin_top = 36.0
+margin_top = 76.0
 margin_right = 500.0
 margin_bottom = 480.0
 rect_clip_content = true
@@ -142,5 +153,6 @@ __meta__ = {
 
 [connection signal="value_changed" from="HSplitContainer/TextureListVBoxContainer/ScaleHSlider" to="." method="_on_TextureListScaleHSlider_value_changed"]
 [connection signal="item_selected" from="HSplitContainer/TextureListVBoxContainer/TextureItemList" to="." method="_on_TextureItemList_item_selected"]
-[connection signal="value_changed" from="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScaleHSlider" to="." method="_on_TextureScaleHSlider_value_changed"]
+[connection signal="pressed" from="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ResetScalingToolButton" to="." method="_on_ResetScalingToolButton_pressed"]
+[connection signal="value_changed" from="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ScaleHSlider" to="." method="_on_TextureScaleHSlider_value_changed"]
 [connection signal="gui_input" from="HSplitContainer/TextureVBoxContainer/Panel" to="." method="_on_Panel_gui_input"]

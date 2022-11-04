@@ -23,11 +23,12 @@ onready var _sprite = $HSplitContainer/TextureVBoxContainer/Panel/ScalingHelper/
 onready var _sprite_border = $HSplitContainer/TextureVBoxContainer/Panel/ScalingHelper/Sprite/SpriteBorder
 onready var _scaling_helper = $HSplitContainer/TextureVBoxContainer/Panel/ScalingHelper
 onready var _selection_rect: ColorRect = $HSplitContainer/TextureVBoxContainer/Panel/ScalingHelper/Sprite/SelectionRect
-onready var _tools_container: HBoxContainer = $HSplitContainer/TextureVBoxContainer/HBoxContainer/HBoxContainer
+onready var _tools_container: HBoxContainer = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ToolsHBoxContainer
 onready var _panel: Panel = $HSplitContainer/TextureVBoxContainer/Panel
 onready var _texture_list_scaler: HSlider = $HSplitContainer/TextureListVBoxContainer/ScaleHSlider
-onready var _texture_scaler: HSlider = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScaleHSlider
-onready var _transform_indicator: TextureRect = $HSplitContainer/TextureVBoxContainer/HBoxContainer/HBoxContainer/TransformationIndicatorPlaceholderColorRect/TransformIndicatorTextureRect
+onready var _texture_scaler: HSlider = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ScaleHSlider
+onready var _transform_indicator: ToolButton = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ToolsHBoxContainer/TransformationIndicatorPlaceholderMarginContainer/TransformationIndicatorPlaceholderToolButton
+onready var _reset_scaling_button: ToolButton = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ResetScalingToolButton
 var _dragging: bool = false
 var _editor_item_indices_by_tile_ids = {}
 var _previous_selected_texture_index: int = -1
@@ -57,7 +58,8 @@ func set_tools(
 	rotate_right_button: ToolButton,
 	flip_horizontally_button: ToolButton,
 	flip_vertically_button: ToolButton,
-	clear_transform_button: ToolButton):
+	clear_transform_button: ToolButton,
+	interface_display_scale: float = 1):
 	
 	_tile_map_editor = tile_map_editor
 	
@@ -93,30 +95,46 @@ func set_tools(
 	_flip_horizontally_button.connect("pressed", self, "_on_flip_horizontally")
 	_flip_vertically_button.connect("pressed", self, "_on_flip_vertically")
 	_clear_transform_button.connect("pressed", self, "_on_clear_transform")
+	
+	_reset_scaling_button.icon = _resize_button_texture(_reset_scaling_button.icon, interface_display_scale / 4)
+	_transform_indicator.icon = _resize_button_texture(_transform_indicator.icon, interface_display_scale / 4)
+
+func _resize_button_texture(texture: Texture, scale: float):
+	var image = texture.get_data() as Image
+	var new_size = image.get_size() * scale
+	image.resize(round(new_size.x), round(new_size.y))
+	var new_texture = ImageTexture.new()
+	new_texture.create_from_image(image)
+	return new_texture
 
 func _on_rotate_counterclockwise():
+	_transform_indicator.rect_pivot_offset = _transform_indicator.rect_size / 2
 	_transform_indicator.rect_rotation -= 90
 	if _transform_indicator.rect_rotation < 0:
 		_transform_indicator.rect_rotation += 360
 
 func _on_rotate_clockwise():
+	_transform_indicator.rect_pivot_offset = _transform_indicator.rect_size / 2
 	_transform_indicator.rect_rotation += 90
 	if _transform_indicator.rect_rotation >= 360:
 		_transform_indicator.rect_rotation -= 360
 
 func _on_flip_horizontally():
+	_transform_indicator.rect_pivot_offset = _transform_indicator.rect_size / 2
 	if _transform_indicator.rect_rotation == 0 or _transform_indicator.rect_rotation == 180:
 		_transform_indicator.rect_scale.x *= -1
 	else:
 		_transform_indicator.rect_scale.y *= -1
 
 func _on_flip_vertically():
+	_transform_indicator.rect_pivot_offset = _transform_indicator.rect_size / 2
 	if _transform_indicator.rect_rotation == 0 or _transform_indicator.rect_rotation == 180:
 		_transform_indicator.rect_scale.y *= -1
 	else:
 		_transform_indicator.rect_scale.x *= -1
 
 func _on_clear_transform():
+	_transform_indicator.rect_pivot_offset = _transform_indicator.rect_size / 2
 	_transform_indicator.rect_rotation = 0
 	_transform_indicator.rect_scale = Vector2.ONE
 
@@ -261,15 +279,19 @@ func _create_multiple_tile_button(tile_id: int, with_bitmask: bool = false):
 		y_coord += 1
 		x_coord = 0
 
+func _reset_scale(new_scale: float = 1):
+	_sprite_border.rect_size = _sprite.texture.get_size()
+	_scaling_helper.rect_position = Vector2.ZERO
+	_scaling_helper.rect_scale = Vector2.ONE * new_scale
+	_sprite.rect_position = Vector2.ZERO
+	_texture_scaler.value = new_scale
+
 func _on_TextureItemList_item_selected(index):
 	var meta = _texture_item_list.get_item_metadata(index)
 	
 	if _previous_selected_texture_index != index:
 		_sprite.texture = meta.texture
-		_sprite_border.rect_size = _sprite.texture.get_size()
-		_scaling_helper.rect_position = Vector2.ZERO
-		_scaling_helper.rect_scale = Vector2.ONE * _texture_scaler.value
-		_sprite.rect_position = Vector2.ZERO
+		_reset_scale(_texture_scaler.value)
 		_previous_selected_texture_index = index
 	
 	for child in _sprite_border.get_children():
@@ -393,3 +415,7 @@ func _on_TextureListScaleHSlider_value_changed(value):
 
 func _on_TextureScaleHSlider_value_changed(value):
 	_set_scale(value)
+
+
+func _on_ResetScalingToolButton_pressed():
+	_reset_scale()

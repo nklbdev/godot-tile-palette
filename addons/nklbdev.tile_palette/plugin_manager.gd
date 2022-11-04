@@ -128,14 +128,15 @@ func _add_tile_palette():
 	_clear_transform_button_position = 4 # _clear_transform_button.get_position_in_parent()
 
 	_tile_palette.set_tools(
-	_tilemap_editor,
+		_tilemap_editor,
 		_disable_autotile_check_box,
 		_enable_priority_check_box,
 		_rotate_left_button,
 		_rotate_right_button,
 		_flip_horizontally_button,
 		_flip_vertically_button,
-		_clear_transform_button)
+		_clear_transform_button,
+		get_editor_interface().get_editor_scale())
 	
 	_on_selection_changed()
 
