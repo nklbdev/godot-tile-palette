@@ -280,7 +280,7 @@ func _create_multiple_tile_button(tile_id: int, with_bitmask: bool = false):
 		x_coord = 0
 
 func _reset_scale(new_scale: float = 1):
-	_sprite_border.rect_size = _sprite.texture.get_size()
+	_sprite_border.rect_size = _sprite.texture.get_size() if _sprite.texture else Vector2.ZERO
 	_scaling_helper.rect_position = Vector2.ZERO
 	_scaling_helper.rect_scale = Vector2.ONE * new_scale
 	_sprite.rect_position = Vector2.ZERO

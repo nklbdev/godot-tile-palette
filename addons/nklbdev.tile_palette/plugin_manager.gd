@@ -56,7 +56,7 @@ func _enter_tree():
 	_tilemap_inspector_plugin = TileMapInspectorPlugin.new(get_editor_interface().get_inspector())
 	add_inspector_plugin(_tilemap_inspector_plugin)
 	_add_tile_palette()
-	_tilemap_inspector_plugin.connect("tile_map_changed", self, "_on_selection_changed")
+	_tilemap_inspector_plugin.connect("tile_map_tile_set_changed", self, "_on_selection_changed")
 
 func _exit_tree():
 	_remove_tile_palette()
