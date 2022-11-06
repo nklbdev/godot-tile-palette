@@ -10,9 +10,6 @@ anchor_bottom = 1.0
 rect_min_size = Vector2( 0, 128 )
 rect_clip_content = true
 script = ExtResource( 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="HSplitContainer" type="HSplitContainer" parent="."]
 anchor_right = 1.0
@@ -91,14 +88,20 @@ margin_right = 500.0
 margin_bottom = 72.0
 size_flags_horizontal = 3
 
+[node name="ShowTileHintsCheckBox" type="CheckBox" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer"]
+margin_right = 126.0
+margin_bottom = 72.0
+text = "Show Tile Hints"
+
 [node name="ResetScalingToolButton" type="ToolButton" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer"]
-margin_right = 76.0
+margin_left = 130.0
+margin_right = 206.0
 margin_bottom = 72.0
 hint_tooltip = "Reset Scaling"
 icon = ExtResource( 2 )
 
 [node name="ScaleHSlider" type="HSlider" parent="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer"]
-margin_left = 80.0
+margin_left = 210.0
 margin_right = 420.0
 margin_bottom = 16.0
 size_flags_horizontal = 3
@@ -133,26 +136,18 @@ margin_top = -230.0
 margin_right = -250.0
 margin_bottom = -230.0
 mouse_filter = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="SelectionRect" type="ColorRect" parent="HSplitContainer/TextureVBoxContainer/Panel/ScalingHelper/Sprite"]
 mouse_filter = 2
 color = Color( 0.568627, 0.686275, 1, 0.196078 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="SpriteBorder" type="ReferenceRect" parent="HSplitContainer/TextureVBoxContainer/Panel/ScalingHelper/Sprite"]
 mouse_filter = 2
 border_color = Color( 0.435294, 0.67451, 0.901961, 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [connection signal="value_changed" from="HSplitContainer/TextureListVBoxContainer/ScaleHSlider" to="." method="_on_TextureListScaleHSlider_value_changed"]
 [connection signal="item_selected" from="HSplitContainer/TextureListVBoxContainer/TextureItemList" to="." method="_on_TextureItemList_item_selected"]
+[connection signal="toggled" from="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ShowTileHintsCheckBox" to="." method="_on_ShowTileHintsCheckBox_toggled"]
 [connection signal="pressed" from="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ResetScalingToolButton" to="." method="_on_ResetScalingToolButton_pressed"]
 [connection signal="value_changed" from="HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ScaleHSlider" to="." method="_on_TextureScaleHSlider_value_changed"]
 [connection signal="gui_input" from="HSplitContainer/TextureVBoxContainer/Panel" to="." method="_on_Panel_gui_input"]

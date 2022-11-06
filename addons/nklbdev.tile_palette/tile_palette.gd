@@ -9,6 +9,7 @@ export var auto_subtile_border_color: Color = Color("4cb299")
 export var absent_tile_border_color: Color = Color(1, 0, 0)
 export var absent_tile_fill_color: Color = Color(1, 0, 0.5)
 export var tile_selection_color: Color = Color(0, 0, 1, 0.7)
+export var tile_hint_label_font_color: Color = Color(0, 0, 0)
 var _tile_list: ItemList
 var _subtile_list: ItemList
 var _disable_autotile_check_box: CheckBox
@@ -29,6 +30,7 @@ onready var _texture_list_scaler: HSlider = $HSplitContainer/TextureListVBoxCont
 onready var _texture_scaler: HSlider = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ScaleHSlider
 onready var _transform_indicator: ToolButton = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ToolsHBoxContainer/TransformationIndicatorPlaceholderMarginContainer/TransformationIndicatorPlaceholderToolButton
 onready var _reset_scaling_button: ToolButton = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ResetScalingToolButton
+onready var _show_tile_hints_check_box: CheckBox = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ShowTileHintsCheckBox
 var _dragging: bool = false
 var _editor_item_indices_by_tile_ids = {}
 var _previous_selected_texture_index: int = -1
@@ -42,6 +44,7 @@ var tilemap: TileMap setget _set_tilemap
 func _set_tilemap(value):
 	tilemap = value
 	if tilemap:
+		_clear()
 		_fill()
 	else:
 		_clear()
@@ -169,37 +172,40 @@ func _fill():
 		var textures = []
 		_texture_item_list.clear()
 		var texture_index = 0
+		var tile_index = 0
 		for tile_id in _tileset.get_tiles_ids():
 			var tile_texture = _tileset.tile_get_texture(tile_id)
 			if tile_texture:
 				if tile_texture in textures:
 					var ti = textures.find(tile_texture)
 					var meta = _texture_item_list.get_item_metadata(ti)
-					meta.tiles_ids.append(tile_id)
+					meta.tiles.append({"index": tile_index, "id": tile_id})
 				else:
 					textures.append(tile_texture)
 					var text = tile_texture.resource_path.get_file() if tile_texture.resource_path else ""
 					_texture_item_list.add_item(text, tile_texture)
-					_texture_item_list.set_item_metadata(texture_index, {"texture": tile_texture, "tiles_ids": [tile_id]})
+					_texture_item_list.set_item_metadata(texture_index, {"texture": tile_texture, "tiles": [{"index": tile_index, "id": tile_id}]})
 					texture_index += 1
+			tile_index += 1
 		
-		for item_idx in range(_tile_list.get_item_count()):
-			var tile_id = _tile_list.get_item_metadata(item_idx)
-			_editor_item_indices_by_tile_ids[str(tile_id)] = item_idx
 		for child in _sprite_border.get_children():
 			_sprite_border.remove_child(child)
 			child.queue_free()
 		if not _tileset.is_connected("changed", self, "_on_tileset_changed"):
 			_tileset.connect("changed", self, "_on_tileset_changed")
-#	if not tilemap.is_connected("settings_changed", self, "_on_tilemap_settings_changed"):
-#		tilemap.connect("settings_changed", self, "_on_tilemap_settings_changed")
+	if _texture_item_list.get_item_count() >= 0:
+		_texture_item_list.select(0)
+		_on_TextureItemList_item_selected(0)
+		for child in _sprite_border.get_children():
+			if child is ReferenceRect:
+				_on_pressed_tile_button(child)
+				break
 
 func _clear():
 	_previous_selected_texture_index = -1
 	_texture_item_list.clear()
 	_sprite.texture = null
 	_sprite_border.rect_size = Vector2.ZERO
-	_editor_item_indices_by_tile_ids.clear()
 	for child in _sprite_border.get_children():
 		_sprite_border.remove_child(child)
 		child.queue_free()
@@ -211,8 +217,6 @@ func _clear():
 	for connection in get_incoming_connections():
 		if connection.source is TileSet and connection.signal_name == "changed" and connection.method_name == "_on_tileset_changed":
 			connection.source.disconnect("changed", self, "_on_tileset_changed")
-#		if connection.source is TileMap and connection.signal_name == "settings_changed" and connection.method_name == "_on_tilemap_settings_changed":
-#			connection.source.disconnect("settings_changed", self, "_on_tilemap_settings_changed")
 
 func _refresh():
 	_clear()
@@ -245,7 +249,7 @@ func _create_tile_button(tile_id: int, tile_region: Rect2, subtile_index = -1, s
 		tile_button.set_meta("tile_id", tile_id)
 		tile_button.set_meta("subtile_index", subtile_index)
 		tile_button.mouse_filter = Control.MOUSE_FILTER_PASS
-		tile_button.connect("gui_input", self, "_on_ReferenceRect_gui_input", [tile_button, tile_id])
+		tile_button.connect("gui_input", self, "_on_ReferenceRect_gui_input", [tile_button])
 		if _last_selected_tile == tile_id:
 			if (_last_selected_subtile == subtile_index) or \
 				(_last_selected_subtile == -1 and subtile_index == 0) or \
@@ -286,6 +290,31 @@ func _reset_scale(new_scale: float = 1):
 	_sprite.rect_position = Vector2.ZERO
 	_texture_scaler.value = new_scale
 
+func _create_tile_hint(tile_index: int, tile_id: int):
+	var tile_region = _tileset.tile_get_region(tile_id)
+	var tile_name = _tileset.tile_get_name(tile_id)
+	var tile_hint_label = Label.new()
+	tile_hint_label.add_color_override("font_color", tile_hint_label_font_color)
+	tile_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tile_hint_label_bg = ColorRect.new()
+	tile_hint_label_bg.mouse_filter = Control.MOUSE_FILTER_PASS
+	tile_hint_label.add_child(tile_hint_label_bg)
+	tile_hint_label_bg.show_behind_parent = true
+	match _tileset.tile_get_tile_mode(tile_id):
+		TileSet.SINGLE_TILE:
+			tile_hint_label.text = "%s:%s SINGLE %s" % [tile_index, tile_id, tile_name]
+			tile_hint_label_bg.color = single_tile_border_color
+		TileSet.AUTO_TILE:
+			tile_hint_label.text = "%s:%s AUTO %s" % [tile_index, tile_id, tile_name]
+			tile_hint_label_bg.color = auto_tile_border_color
+		TileSet.ATLAS_TILE:
+			tile_hint_label.text = "%s:%s ATLAS %s" % [tile_index, tile_id, tile_name]
+			tile_hint_label_bg.color = atlas_tile_border_color
+	_sprite_border.add_child(tile_hint_label)
+	tile_hint_label.rect_position = tile_region.position
+	tile_hint_label_bg.rect_size = tile_hint_label.rect_size
+	tile_hint_label.hint_tooltip = "{tile index}:{tile id} {MODE} {name}"
+
 func _on_TextureItemList_item_selected(index):
 	var meta = _texture_item_list.get_item_metadata(index)
 	
@@ -299,43 +328,58 @@ func _on_TextureItemList_item_selected(index):
 		child.queue_free()
 	_selection_rect.rect_position = Vector2.ZERO
 	_selection_rect.rect_size = Vector2.ZERO
-	for tile_id in meta.tiles_ids:
+	for tile in meta.tiles:
+		match _tileset.tile_get_tile_mode(tile.id):
+			TileSet.SINGLE_TILE:
+				_create_single_tile_button(tile.id)
+			TileSet.ATLAS_TILE:
+				_create_single_tile_button(tile.id) \
+				if _enable_priority_check_box.pressed else \
+				_create_multiple_tile_button(tile.id)
+			TileSet.AUTO_TILE:
+				_create_multiple_tile_button(tile.id, true) \
+				if _disable_autotile_check_box.pressed else \
+				_create_single_tile_button(tile.id)
+		_create_tile_hint(tile.index, tile.id)
+	_update_tile_hints()
+
+func _on_pressed_tile_button(tile_button: ReferenceRect):
+	var tile_id = tile_button.get_meta("tile_id")
+	var tile_index = -1
+	for tile_item_index in range(_tile_list.get_item_count()):
+		if tile_id == _tile_list.get_item_metadata(tile_item_index):
+			tile_index = tile_item_index
+	if tile_index >= 0:
+		_tile_list.select(tile_index)
+		_tile_map_editor._palette_selected(tile_index)
+		_last_selected_subtile = -1
 		match _tileset.tile_get_tile_mode(tile_id):
-			TileSet.SINGLE_TILE: _create_single_tile_button(tile_id)
-			TileSet.ATLAS_TILE: _create_single_tile_button(tile_id) if _enable_priority_check_box.pressed else _create_multiple_tile_button(tile_id)
-			TileSet.AUTO_TILE: _create_multiple_tile_button(tile_id, true) if _disable_autotile_check_box.pressed else _create_single_tile_button(tile_id)
+			TileSet.SINGLE_TILE:
+				_enable_priority_check_box.visible = false
+				_disable_autotile_check_box.visible = false
+			TileSet.ATLAS_TILE:
+				if not _enable_priority_check_box.pressed:
+					var subtile_index = tile_button.get_meta("subtile_index")
+					_last_selected_subtile = subtile_index
+					_subtile_list.select(subtile_index)
+				_enable_priority_check_box.visible = true
+				_disable_autotile_check_box.visible = false
+			TileSet.AUTO_TILE:
+				if _disable_autotile_check_box.pressed:
+					var subtile_index = tile_button.get_meta("subtile_index")
+					_last_selected_subtile = subtile_index
+					_subtile_list.select(subtile_index)
+				_enable_priority_check_box.visible = false
+				_disable_autotile_check_box.visible = true
+		_selection_rect.rect_position = tile_button.rect_position
+		_selection_rect.rect_size = tile_button.rect_size
+		_last_selected_tile = tile_id
 
-
-func _on_ReferenceRect_gui_input(event: InputEvent, tile_button: ReferenceRect, tile_id: int):
+func _on_ReferenceRect_gui_input(event: InputEvent, tile_button: ReferenceRect):
+	var tile_id = tile_button.get_meta("tile_id")
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == BUTTON_LEFT:
-			var tile_index = _editor_item_indices_by_tile_ids[str(tile_id)]
-			_tile_list.select(tile_index)
-			_tile_map_editor._palette_selected(tile_index)
-			_last_selected_subtile = -1
-			match _tileset.tile_get_tile_mode(tile_id):
-				TileSet.SINGLE_TILE:
-					_enable_priority_check_box.visible = false
-					_disable_autotile_check_box.visible = false
-				TileSet.ATLAS_TILE:
-					if not _enable_priority_check_box.pressed:
-#						_subtile_to_select = tile_button.get_meta("subtile_index")
-						var subtile_index = tile_button.get_meta("subtile_index")
-						_last_selected_subtile = subtile_index
-						_subtile_list.select(subtile_index)
-					_enable_priority_check_box.visible = true
-					_disable_autotile_check_box.visible = false
-				TileSet.AUTO_TILE:
-					if _disable_autotile_check_box.pressed:
-#						_subtile_to_select = tile_button.get_meta("subtile_index")
-						var subtile_index = tile_button.get_meta("subtile_index")
-						_last_selected_subtile = subtile_index
-						_subtile_list.select(subtile_index)
-					_enable_priority_check_box.visible = false
-					_disable_autotile_check_box.visible = true
-			_selection_rect.rect_position = tile_button.rect_position
-			_selection_rect.rect_size = tile_button.rect_size
-			_last_selected_tile = tile_id
+			_on_pressed_tile_button(tile_button)
 
 var _mouse_wrapped: bool = false
 func _input(event: InputEvent):
@@ -363,18 +407,26 @@ func _input(event: InputEvent):
 				_mouse_wrapped = true
 				get_viewport().warp_mouse(new_mouse_position)
 
+func _update_tile_hints():
+	for child in _sprite_border.get_children():
+		if child is Label:
+			child.visible = _show_tile_hints_check_box.pressed
+			child.rect_scale = Vector2.ONE / (_scaling_helper.rect_scale)
+
 func _scale(factor: float):
 	var sprite_global_position = _sprite.rect_global_position
 	_scaling_helper.rect_global_position = get_global_mouse_position()
 	_sprite.rect_global_position = sprite_global_position
 	_scaling_helper.rect_scale *= factor
 	_texture_scaler.value = _scaling_helper.rect_scale.x
+	_update_tile_hints()
 
 func _set_scale(value: float):
 	var sprite_global_position = _sprite.rect_global_position
 	_scaling_helper.rect_position = _panel.rect_size / 2
 	_sprite.rect_global_position = sprite_global_position
 	_scaling_helper.rect_scale = Vector2.ONE * value
+	_update_tile_hints()
 
 func _on_mouse_entered():
 	if _mouse_entered:
@@ -419,3 +471,7 @@ func _on_TextureScaleHSlider_value_changed(value):
 
 func _on_ResetScalingToolButton_pressed():
 	_reset_scale()
+
+
+func _on_ShowTileHintsCheckBox_toggled(button_pressed):
+	_update_tile_hints()
