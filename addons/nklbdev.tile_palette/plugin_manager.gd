@@ -67,10 +67,10 @@ func _on_selection_changed():
 	if selected_nodes.size() == 1:
 		var selected_node = selected_nodes[0]
 		if selected_node is TileMap:
-			_tile_palette.tilemap = selected_node
+			_tile_palette.tileset = selected_node.tile_set
 			make_bottom_panel_item_visible(_tile_palette)
 			return
-	_tile_palette.tilemap = null
+	_tile_palette.tileset = null
 
 func _print_tree(node: Node, indent = 0):
 	var prefix = ""

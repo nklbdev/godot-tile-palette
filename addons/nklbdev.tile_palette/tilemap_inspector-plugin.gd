@@ -1,7 +1,7 @@
 tool
 extends EditorInspectorPlugin
 
-signal tile_map_changed
+signal tile_map_tile_set_changed
 
 var _inspector: EditorInspector
 
@@ -18,4 +18,4 @@ func parse_begin(object):
 func _inspector_property_edited(property):
 	print("TilemapInspectorPlugin._on_tile_set_changed")
 	if property == "tile_set":
-		emit_signal("tile_map_changed")
+		emit_signal("tile_map_tile_set_changed")
