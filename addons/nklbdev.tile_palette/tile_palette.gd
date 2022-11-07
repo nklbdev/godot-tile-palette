@@ -312,7 +312,7 @@ func _create_tile_hint(tile_index: int, tile_id: int):
 	tile_hint_label.add_color_override("font_color", tile_hint_label_font_color)
 	tile_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var tile_hint_label_bg = ColorRect.new()
-	tile_hint_label_bg.mouse_filter = Control.MOUSE_FILTER_PASS
+	tile_hint_label_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tile_hint_label.add_child(tile_hint_label_bg)
 	tile_hint_label_bg.show_behind_parent = true
 	match tileset.tile_get_tile_mode(tile_id):
