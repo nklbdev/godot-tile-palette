@@ -16,6 +16,5 @@ func parse_begin(object):
 		_inspector.connect("property_edited", self, "_inspector_property_edited")
 
 func _inspector_property_edited(property):
-	print("TilemapInspectorPlugin._on_tile_set_changed")
 	if property == "tile_set":
 		emit_signal("tile_map_tile_set_changed")
