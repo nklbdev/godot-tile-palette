@@ -8,7 +8,7 @@ This is an editor plugin for [Godot Engine](https://godotengine.org) that provid
 
 ## Installation
 
-Simply [download](https://godotengine.org/asset-library/asset/6540) it from Godot Asset Library.
+Simply [download](https://godotengine.org/asset-library/asset/1528) it from Godot Asset Library.
 
 Alternatively, download or clone this repository and copy the contents of the
 `addons` folder to your own project's `addons` folder.
