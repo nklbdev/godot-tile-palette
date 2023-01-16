@@ -23,7 +23,8 @@ extends EditorPlugin
 #    @@11827:[ItemList:17221] name: @@11827, text: 
 #      @@11826:[VScrollBar:17222] name: @@11826, text: 
 
-const TileMapInspectorPlugin = preload("res://addons/nklbdev.tile_palette/tilemap_inspector-plugin.gd")
+const TileMapInspectorPlugin = preload("tilemap_inspector-plugin.gd")
+const TilePalette = preload("tile_palette.tscn")
 
 var _selection: EditorSelection
 var _tile_palette: Control
@@ -81,7 +82,7 @@ func _print_tree(node: Node, indent = 0):
 		_print_tree(child, indent + 1)
 
 func _add_tile_palette():
-	_tile_palette = load("res://addons/nklbdev.tile_palette/tile_palette.tscn").instance()
+	_tile_palette = TilePalette.instance()
 	_selection = get_editor_interface().get_selection()
 	_selection.connect("selection_changed", self, "_on_selection_changed")
 	add_control_to_bottom_panel(_tile_palette, "Tile Palette")
