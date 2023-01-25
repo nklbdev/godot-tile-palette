@@ -31,7 +31,7 @@ onready var _transform_indicator: ToolButton = $HSplitContainer/TextureVBoxConta
 onready var _reset_scaling_button: ToolButton = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ResetScalingToolButton
 onready var _show_tile_hints_check_box: CheckBox = $HSplitContainer/TextureVBoxContainer/HBoxContainer/ScalingHBoxContainer/ShowTileHintsCheckBox
 onready var _bg_holder: Control = $HSplitContainer/TextureVBoxContainer/Panel/ScalingHelper/Sprite/BgHolder
-var _dragging: bool = false
+var _dragging_button: int = 0
 var _editor_item_indices_by_tile_ids = {}
 var _previous_selected_texture_index: int = -1
 var _mouse_entered = false
@@ -408,15 +408,15 @@ func _on_ReferenceRect_gui_input(event: InputEvent, tile_button: ReferenceRect):
 		return
 	var tile_id = tile_button.get_meta("tile_id")
 	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == BUTTON_LEFT:
+		if event.button_index == BUTTON_LEFT and not event.control:
 			_on_pressed_tile_button(tile_button)
 
 var _mouse_wrapped: bool = false
 func _input(event: InputEvent):
-	if _dragging:
+	if _dragging_button > 0:
 		if event is InputEventMouseButton:
-			if (not event.pressed) and event.button_index == BUTTON_MIDDLE:
-				_dragging = false
+			if (not event.pressed) and event.button_index == _dragging_button:
+				_dragging_button = 0
 		if event is InputEventMouseMotion:
 			if _mouse_wrapped:
 				_mouse_wrapped = false
@@ -484,9 +484,9 @@ func _on_Panel_gui_input(event):
 		_update_buttons_mouse_filter()
 		if event is InputEventMouseButton:
 			match event.button_index:
-				BUTTON_MIDDLE:
-					if event.pressed:
-						_dragging = true
+				BUTTON_LEFT, BUTTON_MIDDLE, BUTTON_RIGHT:
+					if event.pressed and _dragging_button == 0 and (event.button_index != BUTTON_LEFT or event.control):
+						_dragging_button = event.button_index
 				BUTTON_WHEEL_UP:
 					if event.pressed:
 						_scale(1.5)
