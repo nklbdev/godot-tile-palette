@@ -493,6 +493,8 @@ func _on_Panel_gui_input(event):
 				BUTTON_WHEEL_DOWN:
 					if event.pressed:
 						_scale(1 / 1.5)
+	elif event is InputEventPanGesture:
+		_scaling_helper.rect_position -= event.delta * 20.0
 
 func _on_TextureListScaleHSlider_value_changed(value):
 	_texture_item_list.icon_scale = value
